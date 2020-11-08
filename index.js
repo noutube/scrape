@@ -55,6 +55,16 @@ const getDuration = (data) => {
   }
 };
 
+const getThumbnail = (data) => {
+  try {
+    return data[1].response.header.c4TabbedHeaderRenderer.avatar.thumbnails[1].url;
+  } catch (error) {
+    // allow us to debug new formats
+    console.log('failed to get thumbnail', error, JSON.stringify(data, null, 2));
+    throw error;
+  }
+};
+
 exports.handler = async function(event, context) {
   console.log('event', event);
 
@@ -74,6 +84,18 @@ exports.handler = async function(event, context) {
     return {
       statusCode: 200,
       body: JSON.stringify({ duration }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+  } else if (routeKey === 'GET /thumbnail') {
+    const { channelId } = event.queryStringParameters;
+    const data = await getData(`https://www.youtube.com/channel/${channelId}?pbj=1`);
+    const thumbnail = getThumbnail(data);
+    console.log('thumbnail', thumbnail);
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ thumbnail }),
       headers: {
         'Content-Type': 'application/json'
       }
