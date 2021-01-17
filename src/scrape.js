@@ -47,10 +47,34 @@ const getDuration = (data) => {
   try {
     // YouTube randomly picks different response formats
     const playerResponse = data[2].playerResponse || JSON.parse(data[2].player.args.player_response);
-    return parseInt(playerResponse.videoDetails.lengthSeconds, 10);
+    return parseInt(playerResponse.videoDetails.lengthSeconds, 10) || 0;
   } catch (error) {
     // allow us to debug new formats
     console.log('failed to get duration', error, JSON.stringify(data, null, 2));
+    throw error;
+  }
+};
+
+const getLive = (data) => {
+  try {
+    // YouTube randomly picks different response formats
+    const playerResponse = data[2].playerResponse || JSON.parse(data[2].player.args.player_response);
+    return playerResponse.videoDetails.isLiveContent || false;
+  } catch (error) {
+    // allow us to debug new formats
+    console.log('failed to get live', error, JSON.stringify(data, null, 2));
+    throw error;
+  }
+};
+
+const getUpcoming = (data) => {
+  try {
+    // YouTube randomly picks different response formats
+    const playerResponse = data[2].playerResponse || JSON.parse(data[2].player.args.player_response);
+    return playerResponse.videoDetails.isUpcoming || false;
+  } catch (error) {
+    // allow us to debug new formats
+    console.log('failed to get upcoming', error, JSON.stringify(data, null, 2));
     throw error;
   }
 };
@@ -81,9 +105,13 @@ exports.handler = async function(event, context) {
     const data = await getData(`https://www.youtube.com/watch?v=${videoId}&pbj=1`);
     const duration = getDuration(data);
     console.log('duration', duration);
+    const live = getLive(data);
+    console.log('live', live);
+    const upcoming = getUpcoming(data);
+    console.log('upcoming', upcoming);
     return {
       statusCode: 200,
-      body: JSON.stringify({ duration }),
+      body: JSON.stringify({ duration, live, upcoming }),
       headers: {
         'Content-Type': 'application/json'
       }
