@@ -4,18 +4,17 @@ const AWS = require('aws-sdk');
 const lambda = new AWS.Lambda({ apiVersion: '2015-03-31' });
 
 const {
-  LAMBDA_FUNCTION_NAME,
   TOKEN
 } = process.env;
 
-const forceColdStart = async () => {
+const forceColdStart = async (context) => {
   const timestamp = new Date().toISOString();
-  console.log('force cold start', LAMBDA_FUNCTION_NAME, timestamp);
+  console.log('force cold start', context.functionName, timestamp);
 
-  const currentFunctionConfiguration = await lambda.getFunctionConfiguration({ FunctionName: LAMBDA_FUNCTION_NAME }).promise();
+  const currentFunctionConfiguration = await lambda.getFunctionConfiguration({ FunctionName: context.functionName }).promise();
 
   await lambda.updateFunctionConfiguration({
-    FunctionName: LAMBDA_FUNCTION_NAME,
+    FunctionName: context.functionName,
     Environment: {
       Variables: {
         ...currentFunctionConfiguration.Environment.Variables,
@@ -25,7 +24,7 @@ const forceColdStart = async () => {
   }).promise();
 };
 
-const getData = async (url) => {
+const getData = async (url, context) => {
   try {
     const { data } = await axios.get(url, {
       headers: {
@@ -37,7 +36,7 @@ const getData = async (url) => {
   } catch (error) {
     console.log('failed to get data', error);
     if (error.response && error.response.status === 429) {
-      forceColdStart();
+      forceColdStart(context);
     }
     throw error;
   }
@@ -102,7 +101,7 @@ exports.handler = async function(event, context) {
   const { routeKey } = event;
   if (routeKey === 'GET /duration') {
     const { videoId } = event.queryStringParameters;
-    const data = await getData(`https://www.youtube.com/watch?v=${videoId}&pbj=1`);
+    const data = await getData(`https://www.youtube.com/watch?v=${videoId}&pbj=1`, context);
     const duration = getDuration(data);
     console.log('duration', duration);
     const live = getLive(data);
@@ -118,7 +117,7 @@ exports.handler = async function(event, context) {
     };
   } else if (routeKey === 'GET /thumbnail') {
     const { channelId } = event.queryStringParameters;
-    const data = await getData(`https://www.youtube.com/channel/${channelId}?pbj=1`);
+    const data = await getData(`https://www.youtube.com/channel/${channelId}?pbj=1`, context);
     const thumbnail = getThumbnail(data);
     console.log('thumbnail', thumbnail);
     return {
