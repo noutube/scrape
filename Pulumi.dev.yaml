@@ -1,0 +1,5 @@
+config:
+  aws:region: ap-southeast-2
+  nou2ube-scrape:domain: scrape.noutu.be
+  nou2ube-scrape:token:
+    secure: AAABAITXLq2qDhw7y8TUglnM+8gufnQxoy84WpfxdI72uAImJ1dF5sJK9U1kL1VZfkNu7Q5ElXQFN8BynEeXjQ==

@@ -1,0 +1,11 @@
+# nou2ube-scrape
+
+A simple lambda to scrape some data from YouTube missing from the payloads we receive.
+
+## Deploy
+
+1. Install `pulumi`.
+2. Configure `aws-cli` credentials.
+3. Run `yarn` inside `src`.
+4. Run `pulumi up` to deploy.
+5. Manually create CNAME records.
