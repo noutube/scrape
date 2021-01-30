@@ -78,6 +78,23 @@ const getUpcoming = (data) => {
   }
 };
 
+const getScheduledAt = (data) => {
+  try {
+    // YouTube randomly picks different response formats
+    const playerResponse = data[2].playerResponse || JSON.parse(data[2].player.args.player_response);
+    const { liveStreamability, status } = playerResponse.playabilityStatus;
+    if (status === 'LIVE_STREAM_OFFLINE') {
+      return liveStreamability.liveStreamabilityRenderer.offlineSlate.liveStreamOfflineSlateRenderer.scheduledStartTime || null;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    // allow us to debug new formats
+    console.log('failed to get upcoming', error, JSON.stringify(data, null, 2));
+    throw error;
+  }
+};
+
 const getThumbnail = (data) => {
   try {
     return data[1].response.header.c4TabbedHeaderRenderer.avatar.thumbnails[1].url;
@@ -108,9 +125,11 @@ exports.handler = async function(event, context) {
     console.log('live', live);
     const upcoming = getUpcoming(data);
     console.log('upcoming', upcoming);
+    const scheduledAt = getScheduledAt(data);
+    console.log('scheduledAt', scheduledAt);
     return {
       statusCode: 200,
-      body: JSON.stringify({ duration, live, upcoming }),
+      body: JSON.stringify({ duration, live, upcoming, scheduledAt }),
       headers: {
         'Content-Type': 'application/json'
       }
