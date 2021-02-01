@@ -106,9 +106,9 @@ const integration = new aws.apigatewayv2.Integration(projectName, {
   payloadFormatVersion: '2.0'
 });
 
-// TODO: can't get $default route source ARN to work
+// TODO: can't get $default route sourceArn to work
 // https://github.com/aws/serverless-application-model/issues/1860
-['duration', 'thumbnail'].forEach((route) => {
+['video', 'channel'].forEach((route) => {
   new aws.apigatewayv2.Route(`${projectName}-${route}`, {
     apiId: apigw.id,
     routeKey: `GET /${route}`,

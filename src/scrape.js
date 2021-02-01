@@ -116,7 +116,7 @@ exports.handler = async function(event, context) {
   }
 
   const { routeKey } = event;
-  if (routeKey === 'GET /duration') {
+  if (routeKey === 'GET /video') {
     const { videoId } = event.queryStringParameters;
     const data = await getData(`https://www.youtube.com/watch?v=${videoId}&pbj=1`, context);
     const duration = getDuration(data);
@@ -134,7 +134,7 @@ exports.handler = async function(event, context) {
         'Content-Type': 'application/json'
       }
     };
-  } else if (routeKey === 'GET /thumbnail') {
+  } else if (routeKey === 'GET /channel') {
     const { channelId } = event.queryStringParameters;
     const data = await getData(`https://www.youtube.com/channel/${channelId}?pbj=1`, context);
     const thumbnail = getThumbnail(data);
