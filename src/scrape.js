@@ -42,55 +42,53 @@ const getData = async (url, context) => {
   }
 };
 
+const getPlayerResponse = (data) => {
+  // YouTube randomly picks different response formats
+  return data[2].playerResponse || JSON.parse(data[2].player.args.player_response);
+};
+
 const getDuration = (data) => {
   try {
-    // YouTube randomly picks different response formats
-    const playerResponse = data[2].playerResponse || JSON.parse(data[2].player.args.player_response);
-    return parseInt(playerResponse.videoDetails.lengthSeconds, 10) || 0;
+    return parseInt(getPlayerResponse(data).videoDetails.lengthSeconds, 10) || 0;
   } catch (error) {
-    // allow us to debug new formats
     console.log('failed to get duration', error, JSON.stringify(data, null, 2));
     throw error;
   }
 };
 
-const getLive = (data) => {
+const getIsLive = (data) => {
   try {
-    // YouTube randomly picks different response formats
-    const playerResponse = data[2].playerResponse || JSON.parse(data[2].player.args.player_response);
-    return playerResponse.videoDetails.isLiveContent || false;
+    return getPlayerResponse(data).videoDetails.isLive || false;
   } catch (error) {
-    // allow us to debug new formats
-    console.log('failed to get live', error, JSON.stringify(data, null, 2));
+    console.log('failed to get isLive', error, JSON.stringify(data, null, 2));
     throw error;
   }
 };
 
-const getUpcoming = (data) => {
+const getIsLiveContent = (data) => {
   try {
-    // YouTube randomly picks different response formats
-    const playerResponse = data[2].playerResponse || JSON.parse(data[2].player.args.player_response);
-    return playerResponse.videoDetails.isUpcoming || false;
+    return getPlayerResponse(data).videoDetails.isLiveContent || false;
   } catch (error) {
-    // allow us to debug new formats
-    console.log('failed to get upcoming', error, JSON.stringify(data, null, 2));
+    console.log('failed to get isLiveContent', error, JSON.stringify(data, null, 2));
+    throw error;
+  }
+};
+
+const getIsUpcoming = (data) => {
+  try {
+    return getPlayerResponse(data).videoDetails.isUpcoming || false;
+  } catch (error) {
+    console.log('failed to get isUpcoming', error, JSON.stringify(data, null, 2));
     throw error;
   }
 };
 
 const getScheduledAt = (data) => {
   try {
-    // YouTube randomly picks different response formats
-    const playerResponse = data[2].playerResponse || JSON.parse(data[2].player.args.player_response);
-    const { liveStreamability, status } = playerResponse.playabilityStatus;
-    if (status === 'LIVE_STREAM_OFFLINE') {
-      return liveStreamability.liveStreamabilityRenderer.offlineSlate.liveStreamOfflineSlateRenderer.scheduledStartTime || null;
-    } else {
-      return null;
-    }
+    const { liveStreamability, status } = getPlayerResponse(data).playabilityStatus;
+    return status === 'LIVE_STREAM_OFFLINE' && liveStreamability.liveStreamabilityRenderer.offlineSlate.liveStreamOfflineSlateRenderer.scheduledStartTime || null;
   } catch (error) {
-    // allow us to debug new formats
-    console.log('failed to get upcoming', error, JSON.stringify(data, null, 2));
+    console.log('failed to get scheduledAt', error, JSON.stringify(data, null, 2));
     throw error;
   }
 };
@@ -99,7 +97,6 @@ const getThumbnail = (data) => {
   try {
     return data[1].response.header.c4TabbedHeaderRenderer.avatar.thumbnails[1].url;
   } catch (error) {
-    // allow us to debug new formats
     console.log('failed to get thumbnail', error, JSON.stringify(data, null, 2));
     throw error;
   }
@@ -121,15 +118,17 @@ exports.handler = async function(event, context) {
     const data = await getData(`https://www.youtube.com/watch?v=${videoId}&pbj=1`, context);
     const duration = getDuration(data);
     console.log('duration', duration);
-    const live = getLive(data);
-    console.log('live', live);
-    const upcoming = getUpcoming(data);
-    console.log('upcoming', upcoming);
+    const isLive = getIsLive(data);
+    console.log('isLive', isLive);
+    const isLiveContent = getIsLiveContent(data);
+    console.log('isLiveContent', isLiveContent);
+    const isUpcoming = getIsUpcoming(data);
+    console.log('isUpcoming', isUpcoming);
     const scheduledAt = getScheduledAt(data);
     console.log('scheduledAt', scheduledAt);
     return {
       statusCode: 200,
-      body: JSON.stringify({ duration, live, upcoming, scheduledAt }),
+      body: JSON.stringify({ duration, isLive, isLiveContent, isUpcoming, scheduledAt }),
       headers: {
         'Content-Type': 'application/json'
       }
