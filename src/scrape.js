@@ -35,7 +35,7 @@ const getData = async (url, context) => {
     return data;
   } catch (error) {
     console.log('failed to get data', error);
-    if (error.response && error.response.status === 429) {
+    if (error.response?.status === 429) {
       forceColdStart(context);
     }
     throw error;
@@ -44,12 +44,12 @@ const getData = async (url, context) => {
 
 const getPlayerResponse = (data) => {
   // YouTube randomly picks different response formats
-  return data[2].playerResponse || JSON.parse(data[2].player.args.player_response);
+  return data[2].playerResponse ?? JSON.parse(data[2].player.args.player_response);
 };
 
 const getDuration = (data) => {
   try {
-    return parseInt(getPlayerResponse(data).videoDetails.lengthSeconds, 10) || 0;
+    return parseInt(getPlayerResponse(data).videoDetails.lengthSeconds, 10) ?? 0;
   } catch (error) {
     console.log('failed to get duration', error, JSON.stringify(data, null, 2));
     throw error;
@@ -58,7 +58,7 @@ const getDuration = (data) => {
 
 const getIsLive = (data) => {
   try {
-    return getPlayerResponse(data).videoDetails.isLive || false;
+    return getPlayerResponse(data).videoDetails.isLive ?? false;
   } catch (error) {
     console.log('failed to get isLive', error, JSON.stringify(data, null, 2));
     throw error;
@@ -67,7 +67,7 @@ const getIsLive = (data) => {
 
 const getIsLiveContent = (data) => {
   try {
-    return getPlayerResponse(data).videoDetails.isLiveContent || false;
+    return getPlayerResponse(data).videoDetails.isLiveContent ?? false;
   } catch (error) {
     console.log('failed to get isLiveContent', error, JSON.stringify(data, null, 2));
     throw error;
@@ -76,7 +76,7 @@ const getIsLiveContent = (data) => {
 
 const getIsUpcoming = (data) => {
   try {
-    return getPlayerResponse(data).videoDetails.isUpcoming || false;
+    return getPlayerResponse(data).videoDetails.isUpcoming ?? false;
   } catch (error) {
     console.log('failed to get isUpcoming', error, JSON.stringify(data, null, 2));
     throw error;
@@ -85,8 +85,7 @@ const getIsUpcoming = (data) => {
 
 const getScheduledAt = (data) => {
   try {
-    const { liveStreamability, status } = getPlayerResponse(data).playabilityStatus;
-    return status === 'LIVE_STREAM_OFFLINE' && liveStreamability.liveStreamabilityRenderer.offlineSlate.liveStreamOfflineSlateRenderer.scheduledStartTime || null;
+    return getPlayerResponse(data).playabilityStatus.liveStreamability?.liveStreamabilityRenderer.offlineSlate.liveStreamOfflineSlateRenderer.scheduledStartTime ?? null;
   } catch (error) {
     console.log('failed to get scheduledAt', error, JSON.stringify(data, null, 2));
     throw error;
