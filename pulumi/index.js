@@ -17,7 +17,7 @@ const lambdaRole = new aws.iam.Role(projectName, {
 
 const lambda = new aws.lambda.Function(projectName, {
   code: new pulumi.asset.AssetArchive({
-    '.': new pulumi.asset.FileArchive('./src')
+    '.': new pulumi.asset.FileArchive('../src')
   }),
   runtime: 'nodejs14.x',
   role: lambdaRole.arn,
