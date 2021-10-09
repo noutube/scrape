@@ -1,4 +1,4 @@
-# nou2ube-scrape
+# NoUTube Scrape
 
 A simple lambda to scrape some data from YouTube missing from the payloads we receive.
 
