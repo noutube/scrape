@@ -47,6 +47,24 @@ const getPlayerResponse = (data) => {
   return data[2].playerResponse ?? JSON.parse(data[2].player.args.player_response);
 };
 
+const getChannelId = (data) => {
+  try {
+    return getPlayerResponse(data).videoDetails.channelId;
+  } catch (error) {
+    console.log('failed to get channelId', error, JSON.stringify(data, null, 2));
+    throw error;
+  }
+};
+
+const getChannelTitle = (data) => {
+  try {
+    return data[1].response.header.c4TabbedHeaderRenderer.title;
+  } catch (error) {
+    console.log('failed to get title', error, JSON.stringify(data, null, 2));
+    throw error;
+  }
+};
+
 const getDuration = (data) => {
   try {
     return parseInt(getPlayerResponse(data).videoDetails.lengthSeconds, 10) ?? 0;
@@ -83,6 +101,15 @@ const getIsUpcoming = (data) => {
   }
 };
 
+const getPublishedDate = (data) => {
+  try {
+    return getPlayerResponse(data).microformat.playerMicroformatRenderer.publishDate;
+  } catch (error) {
+    console.log('failed to get publishedDate', error, JSON.stringify(data, null, 2));
+    throw error;
+  }
+};
+
 const getScheduledAt = (data) => {
   try {
     return getPlayerResponse(data).playabilityStatus.liveStreamability?.liveStreamabilityRenderer.offlineSlate.liveStreamOfflineSlateRenderer.scheduledStartTime ?? null;
@@ -101,6 +128,15 @@ const getThumbnail = (data) => {
   }
 };
 
+const getVideoTitle = (data) => {
+  try {
+    return getPlayerResponse(data).videoDetails.title;
+  } catch (error) {
+    console.log('failed to get title', error, JSON.stringify(data, null, 2));
+    throw error;
+  }
+};
+
 exports.handler = async function(event, context) {
   console.log('event', event);
 
@@ -115,6 +151,8 @@ exports.handler = async function(event, context) {
   if (routeKey === 'GET /video') {
     const { videoId } = event.queryStringParameters;
     const data = await getData(`https://www.youtube.com/watch?v=${videoId}&pbj=1`, context);
+    const channelId = getChannelId(data);
+    console.log('channelId', channelId);
     const duration = getDuration(data);
     console.log('duration', duration);
     const isLive = getIsLive(data);
@@ -123,11 +161,15 @@ exports.handler = async function(event, context) {
     console.log('isLiveContent', isLiveContent);
     const isUpcoming = getIsUpcoming(data);
     console.log('isUpcoming', isUpcoming);
+    const publishedDate = getPublishedDate(data);
+    console.log('publishedDate', publishedDate);
     const scheduledAt = getScheduledAt(data);
     console.log('scheduledAt', scheduledAt);
+    const title = getVideoTitle(data);
+    console.log('title', title);
     return {
       statusCode: 200,
-      body: JSON.stringify({ duration, isLive, isLiveContent, isUpcoming, scheduledAt }),
+      body: JSON.stringify({ channelId, duration, isLive, isLiveContent, isUpcoming, publishedDate, scheduledAt, title }),
       headers: {
         'Content-Type': 'application/json'
       }
@@ -137,9 +179,11 @@ exports.handler = async function(event, context) {
     const data = await getData(`https://www.youtube.com/channel/${channelId}?pbj=1`, context);
     const thumbnail = getThumbnail(data);
     console.log('thumbnail', thumbnail);
+    const title = getChannelTitle(data);
+    console.log('title', title);
     return {
       statusCode: 200,
-      body: JSON.stringify({ thumbnail }),
+      body: JSON.stringify({ thumbnail, title }),
       headers: {
         'Content-Type': 'application/json'
       }
