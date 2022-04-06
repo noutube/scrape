@@ -44,7 +44,12 @@ const getData = async (url, context) => {
 
 const getPlayerResponse = (data) => {
   // YouTube randomly picks different response formats
-  return data[2].playerResponse ?? JSON.parse(data[2].player.args.player_response);
+  return data.playerResponse ?? data[2].playerResponse ?? JSON.parse(data[2].player.args.player_response);
+};
+
+const getResponse = (data) => {
+  // YouTube randomly picks different response formats
+  return data.response ?? data[1].response;
 };
 
 const getChannelId = (data) => {
@@ -58,7 +63,7 @@ const getChannelId = (data) => {
 
 const getChannelTitle = (data) => {
   try {
-    return data[1].response.header.c4TabbedHeaderRenderer.title;
+    return getResponse(data).header.c4TabbedHeaderRenderer.title;
   } catch (error) {
     console.log('failed to get title', error, JSON.stringify(data, null, 2));
     throw error;
@@ -121,7 +126,7 @@ const getScheduledAt = (data) => {
 
 const getThumbnail = (data) => {
   try {
-    return data[1].response.header.c4TabbedHeaderRenderer.avatar.thumbnails[1].url;
+    return getResponse(data).header.c4TabbedHeaderRenderer.avatar.thumbnails[1].url;
   } catch (error) {
     console.log('failed to get thumbnail', error, JSON.stringify(data, null, 2));
     throw error;
