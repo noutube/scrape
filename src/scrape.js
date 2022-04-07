@@ -55,20 +55,46 @@ exports.handler = async function(event, context) {
   const { routeKey } = event;
   if (routeKey === 'GET /channel') {
     const { channelId } = event.queryStringParameters;
-    const result = await scrapeChannel(channelId, context);
+    console.log('channelId', channelId);
+
+    const data = await getData(`https://www.youtube.com/channel/${channelId}?pbj=1`, context);
+    const response = getChannelResponse(data);
+
+    if (response.alerts) {
+      const alerts = response.alerts.map((alert) => alert.alertRenderer.text.simpleText);
+      console.log('channel has alerts', alerts, JSON.stringify(response.alerts, null, 2));
+      return {
+        statusCode: 403
+      };
+    }
+
     return {
       statusCode: 200,
-      body: JSON.stringify(result),
+      body: JSON.stringify(getChannel(response)),
       headers: {
         'Content-Type': 'application/json'
       }
     };
   } else if (routeKey === 'GET /video') {
     const { videoId } = event.queryStringParameters;
-    const result = await scrapeVideo(videoId, context);
+    console.log('videoId', videoId);
+
+    const data = await getData(`https://www.youtube.com/watch?v=${videoId}&pbj=1`, context);
+    const response = getVideoResponse(data);
+
+    if (response.playabilityStatus.errorScreen) {
+      const status = response.playabilityStatus.status;
+      const reason = response.playabilityStatus.errorScreen.playerErrorMessageRenderer.reason.simpleText;
+      const subreason = response.playabilityStatus.errorScreen.playerErrorMessageRenderer.subreason.simpleText;
+      console.log('video has a playability error', { status, reason, subreason }, JSON.stringify(response.playabilityStatus, null, 2));
+      return {
+        statusCode: 403
+      };
+    }
+
     return {
       statusCode: 200,
-      body: JSON.stringify(result),
+      body: JSON.stringify(getVideo(response)),
       headers: {
         'Content-Type': 'application/json'
       }
@@ -82,11 +108,7 @@ exports.handler = async function(event, context) {
 
 // channel
 
-const scrapeChannel = async (channelId, context) => {
-  console.log('channelId', channelId);
-  const data = await getData(`https://www.youtube.com/channel/${channelId}?pbj=1`, context);
-  const response = getChannelResponse(data);
-
+const getChannel = (response) => {
   const thumbnail = getChannelThumbnail(response);
   console.log('thumbnail', thumbnail);
   const title = getChannelTitle(response);
@@ -125,11 +147,7 @@ const getChannelTitle = (response) => {
 
 // video
 
-const scrapeVideo = async (videoId, context) => {
-  console.log('videoId', videoId);
-  const data = await getData(`https://www.youtube.com/watch?v=${videoId}&pbj=1`, context);
-  const response = getVideoResponse(data);
-
+const getVideo = (response) => {
   const channelId = getVideoChannelId(response);
   console.log('channelId', channelId);
   const duration = getVideoDuration(response);
