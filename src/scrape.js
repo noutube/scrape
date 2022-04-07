@@ -89,6 +89,13 @@ exports.handler = async function(event, context) {
       };
     }
 
+    if (response.playabilityStatus.status === 'ERROR') {
+      console.log('video is not available', JSON.stringify(response.playabilityStatus, null, 2));
+      return {
+        statusCode: 403
+      };
+    }
+
     return {
       statusCode: 200,
       body: JSON.stringify(getVideo(response)),
