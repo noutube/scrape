@@ -82,11 +82,8 @@ exports.handler = async function(event, context) {
     const data = await getData(`https://www.youtube.com/watch?v=${videoId}&pbj=1`, context);
     const response = getVideoResponse(data);
 
-    if (response.playabilityStatus.errorScreen) {
-      const status = response.playabilityStatus.status;
-      const reason = response.playabilityStatus.errorScreen.playerErrorMessageRenderer.reason.simpleText;
-      const subreason = response.playabilityStatus.errorScreen.playerErrorMessageRenderer.subreason.simpleText;
-      console.log('video has a playability error', { status, reason, subreason }, JSON.stringify(response.playabilityStatus, null, 2));
+    if (response.playabilityStatus.status === 'LOGIN_REQUIRED') {
+      console.log('video is private', JSON.stringify(response.playabilityStatus, null, 2));
       return {
         statusCode: 403
       };
