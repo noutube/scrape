@@ -54,10 +54,15 @@ exports.handler = async function(event, context) {
 
   const { routeKey } = event;
   if (routeKey === 'GET /channel') {
-    const { channelId } = event.queryStringParameters;
-    console.log('channelId', channelId);
+    const { channelId, url } = event.queryStringParameters;
+    const path = buildChannelPath(channelId, url);
+    if (!path) {
+      return {
+        statusCode: 400
+      }
+    }
 
-    const data = await getData(`https://www.youtube.com/channel/${channelId}?pbj=1`, context);
+    const data = await getData(`https://www.youtube.com${path}?pbj=1`, context);
     const response = getChannelResponse(data);
 
     if (response.alerts) {
@@ -76,10 +81,15 @@ exports.handler = async function(event, context) {
       }
     };
   } else if (routeKey === 'GET /video') {
-    const { videoId } = event.queryStringParameters;
-    console.log('videoId', videoId);
+    const { videoId, url } = event.queryStringParameters;
+    const path = buildVideoPath(videoId, url);
+    if (!path) {
+      return {
+        statusCode: 400
+      }
+    }
 
-    const data = await getData(`https://www.youtube.com/watch?v=${videoId}&pbj=1`, context);
+    const data = await getData(`https://www.youtube.com${path}&pbj=1`, context);
     const response = getVideoResponse(data);
 
     if (response.playabilityStatus.status === 'LOGIN_REQUIRED') {
@@ -111,6 +121,23 @@ exports.handler = async function(event, context) {
 };
 
 // channel
+
+const buildChannelPath = (channelId, url) => {
+  if (channelId) {
+    console.log('channelId', channelId);
+    return `/channel/${channelId}`;
+  } else if (url) {
+    console.log('url', url);
+    const { pathname } = new URL(url);
+    if (/^\/(user\/|channel\/|c\/|)[A-Za-z0-9_-]+$/.test(pathname) && pathname !== '/watch') {
+      return pathname;
+    } else {
+      console.log('invalid url');
+    }
+  } else {
+    console.log('missing channelId or url');
+  }
+};
 
 const getChannel = (response) => {
   const thumbnail = getChannelThumbnail(response);
@@ -150,6 +177,25 @@ const getChannelTitle = (response) => {
 };
 
 // video
+
+const buildVideoPath = (videoId, url) => {
+  if (videoId) {
+    console.log('videoId', videoId);
+    return `/watch?v=${videoId}`;
+  } else if (url) {
+    console.log('url', url);
+    const { hostname, pathname, searchParams } = new URL(url);
+    if (hostname === 'youtu.be') {
+      return `/watch?v=${pathname.substring(1)}`;
+    } else if (pathname === '/watch') {
+      return `/watch?v=${searchParams.get('v')}`;
+    } else {
+      console.log('invalid url');
+    }
+  } else {
+    console.log('missing videoId or url');
+  }
+};
 
 const getVideo = (response) => {
   const channelId = getVideoChannelId(response);
