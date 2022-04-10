@@ -225,8 +225,10 @@ const getVideo = (response) => {
   console.log('scheduledAt', scheduledAt);
   const title = getVideoTitle(response);
   console.log('title', title);
+  const videoId = getVideoVideoId(response);
+  console.log('videoId', videoId);
 
-  return { channelId, duration, isLive, isLiveContent, isUpcoming, publishedDate, scheduledAt, title };
+  return { channelId, duration, isLive, isLiveContent, isUpcoming, publishedDate, scheduledAt, title, videoId };
 };
 
 const getVideoResponse = (data) => {
@@ -307,6 +309,15 @@ const getVideoTitle = (response) => {
     return response.videoDetails.title;
   } catch (error) {
     console.log('failed to get video title', error, JSON.stringify(response, null, 2));
+    throw error;
+  }
+};
+
+const getVideoVideoId = (response) => {
+  try {
+    return response.videoDetails.videoId;
+  } catch (error) {
+    console.log('failed to get video videoId', error, JSON.stringify(response, null, 2));
     throw error;
   }
 };
