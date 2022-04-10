@@ -284,7 +284,7 @@ const getVideoPublishedDate = (response) => {
 
 const getVideoScheduledAt = (response) => {
   try {
-    return response.playabilityStatus.liveStreamability?.liveStreamabilityRenderer.offlineSlate.liveStreamOfflineSlateRenderer.scheduledStartTime ?? null;
+    return response.playabilityStatus.liveStreamability?.liveStreamabilityRenderer.offlineSlate?.liveStreamOfflineSlateRenderer.scheduledStartTime ?? null;
   } catch (error) {
     console.log('failed to get video scheduledAt', error, JSON.stringify(response, null, 2));
     throw error;
