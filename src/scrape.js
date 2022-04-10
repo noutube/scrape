@@ -140,12 +140,14 @@ const buildChannelPath = (channelId, url) => {
 };
 
 const getChannel = (response) => {
+  const channelId = getChannelChannelId(response);
+  console.log('channelId', channelId);
   const thumbnail = getChannelThumbnail(response);
   console.log('thumbnail', thumbnail);
   const title = getChannelTitle(response);
   console.log('title', title);
 
-  return { thumbnail, title };
+  return { channelId, thumbnail, title };
 };
 
 const getChannelResponse = (data) => {
@@ -154,6 +156,15 @@ const getChannelResponse = (data) => {
     return data.response ?? data[1].response;
   } catch (error) {
     console.log('failed to get channel response', error, JSON.stringify(data, null, 2));
+    throw error;
+  }
+};
+
+const getChannelChannelId = (response) => {
+  try {
+    return response.header.c4TabbedHeaderRenderer.channelId;
+  } catch (error) {
+    console.log('failed to get channel channelId', error, JSON.stringify(response, null, 2));
     throw error;
   }
 };
