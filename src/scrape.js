@@ -8,11 +8,13 @@ exports.handler = async (event, context) => {
   console.log('event', event);
 
   const { token } = event.queryStringParameters;
+  /*
   if (token !== TOKEN) {
     return {
       statusCode: 401
     };
   }
+  */
 
   const { routeKey } = event;
   if (routeKey === 'GET /channel') {

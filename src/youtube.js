@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const aws = require('./aws');
+//const aws = require('./aws');
 
 const getData = async (url, context) => {
   try {
@@ -14,7 +14,7 @@ const getData = async (url, context) => {
   } catch (error) {
     console.log('failed to get data', error);
     if (error.response?.status === 429) {
-      aws.forceColdStart(context);
+      //aws.forceColdStart(context);
     }
     throw error;
   }
