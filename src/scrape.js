@@ -1,3 +1,4 @@
+const twitch = require('./twitch');
 const youtube = require('./youtube');
 
 const {
@@ -21,6 +22,8 @@ exports.handler = async (event, context) => {
     return await youtube.scrapeChannel(event, context);
   } else if (routeKey === 'GET /video') {
     return await youtube.scrapeVideo(event, context);
+  } else if (routeKey === 'GET /twitch/channel') {
+    return await twitch.scrapeChannel(event, context);
   }
 
   return {
