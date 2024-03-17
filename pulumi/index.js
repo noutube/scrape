@@ -19,7 +19,7 @@ const lambda = new aws.lambda.Function(projectName, {
   code: new pulumi.asset.AssetArchive({
     '.': new pulumi.asset.FileArchive('../src')
   }),
-  runtime: 'nodejs14.x',
+  runtime: 'nodejs20.x',
   role: lambdaRole.arn,
   handler: 'scrape.handler',
   timeout: 30,

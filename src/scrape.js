@@ -1,7 +1,5 @@
-const axios = require('axios');
-
-const AWS = require('aws-sdk');
-const lambda = new AWS.Lambda({ apiVersion: '2015-03-31' });
+const { Lambda } = require('@aws-sdk/client-lambda');
+const lambda = new Lambda({});
 
 const {
   TOKEN
@@ -11,7 +9,7 @@ const forceColdStart = async (context) => {
   const timestamp = new Date().toISOString();
   console.log('force cold start', context.functionName, timestamp);
 
-  const currentFunctionConfiguration = await lambda.getFunctionConfiguration({ FunctionName: context.functionName }).promise();
+  const currentFunctionConfiguration = await lambda.getFunctionConfiguration({ FunctionName: context.functionName });
 
   await lambda.updateFunctionConfiguration({
     FunctionName: context.functionName,
@@ -21,23 +19,27 @@ const forceColdStart = async (context) => {
         TIMESTAMP: timestamp
       }
     }
-  }).promise();
+  });
 };
 
 const getData = async (url, context) => {
   try {
-    const { data } = await axios.get(url, {
+    const response = await fetch(url, {
       headers: {
         'X-YouTube-Client-Name': '1',
         'X-YouTube-Client-Version': '2.20200214.04.00'
       }
     });
-    return data;
+    if (!response.ok) {
+      console.log('failed to get data', response.status, await response.text());
+      if (response.status === 429) {
+        forceColdStart(context);
+      }
+      throw new Error(`failed to get data: ${response.status}, ${await response.text()}`);
+    }
+    return await response.json();
   } catch (error) {
     console.log('failed to get data', error);
-    if (error.response?.status === 429) {
-      forceColdStart(context);
-    }
     throw error;
   }
 };
