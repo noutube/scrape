@@ -131,7 +131,7 @@ const buildChannelPath = (channelId, url) => {
   } else if (url) {
     console.log('url', url);
     const { pathname } = new URL(url);
-    if (/^\/(user\/|channel\/|c\/|)[A-Za-z0-9_-]+$/.test(pathname) && pathname !== '/watch') {
+    if (/^\/(user\/|channel\/|c\/|@|)[A-Za-z0-9_-]+$/.test(pathname) && pathname !== '/watch') {
       return pathname;
     } else {
       console.log('invalid url');
