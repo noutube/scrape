@@ -164,7 +164,7 @@ const getChannelResponse = (data) => {
 
 const getChannelChannelId = (response) => {
   try {
-    return response.header.c4TabbedHeaderRenderer.channelId;
+    return response.header.c4TabbedHeaderRenderer?.channelId ?? response.metadata.channelMetadataRenderer.externalId;
   } catch (error) {
     console.log('failed to get channel channelId', error, JSON.stringify(response, null, 2));
     throw error;
@@ -173,7 +173,7 @@ const getChannelChannelId = (response) => {
 
 const getChannelThumbnail = (response) => {
   try {
-    return response.header.c4TabbedHeaderRenderer.avatar.thumbnails[1].url;
+    return response.header.c4TabbedHeaderRenderer?.avatar?.thumbnails?.[1]?.url ?? response.metadata.channelMetadataRenderer.avatar.thumbnails[0].url;
   } catch (error) {
     console.log('failed to get channel thumbnail', error, JSON.stringify(response, null, 2));
     throw error;
@@ -182,7 +182,7 @@ const getChannelThumbnail = (response) => {
 
 const getChannelTitle = (response) => {
   try {
-    return response.header.c4TabbedHeaderRenderer.title;
+    return response.header.c4TabbedHeaderRenderer?.title ?? response.metadata.channelMetadataRenderer.title;
   } catch (error) {
     console.log('failed to get channel title', error, JSON.stringify(response, null, 2));
     throw error;
