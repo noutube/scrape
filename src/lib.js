@@ -1,28 +1,11 @@
-const { Lambda } = require('@aws-sdk/client-lambda');
-const lambda = new Lambda({});
+class RateLimitedError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'RateLimitedError';
+  }
+}
 
-const {
-  TOKEN
-} = process.env;
-
-const forceColdStart = async (context) => {
-  const timestamp = new Date().toISOString();
-  console.log('force cold start', context.functionName, timestamp);
-
-  const currentFunctionConfiguration = await lambda.getFunctionConfiguration({ FunctionName: context.functionName });
-
-  await lambda.updateFunctionConfiguration({
-    FunctionName: context.functionName,
-    Environment: {
-      Variables: {
-        ...currentFunctionConfiguration.Environment.Variables,
-        TIMESTAMP: timestamp
-      }
-    }
-  });
-};
-
-const getData = async (url, context) => {
+const getData = async (url) => {
   try {
     const response = await fetch(url, {
       headers: {
@@ -33,7 +16,7 @@ const getData = async (url, context) => {
     if (!response.ok) {
       console.log('failed to get data', response.status, await response.text());
       if (response.status === 429) {
-        forceColdStart(context);
+        throw new RateLimitedError('429 in getData');
       }
       throw new Error(`failed to get data: ${response.status}, ${await response.text()}`);
     }
@@ -44,85 +27,35 @@ const getData = async (url, context) => {
   }
 };
 
-exports.handler = async function(event, context) {
-  console.log('event', event);
+// channel
 
-  const { token } = event.queryStringParameters;
-  if (token !== TOKEN) {
+const handleChannel = async (channelId, url) => {
+  const path = buildChannelPath(channelId, url);
+  if (!path) {
     return {
-      statusCode: 401
-    };
+      statusCode: 400
+    }
   }
 
-  const { routeKey } = event;
-  if (routeKey === 'GET /channel') {
-    const { channelId, url } = event.queryStringParameters;
-    const path = buildChannelPath(channelId, url);
-    if (!path) {
-      return {
-        statusCode: 400
-      }
-    }
+  const data = await getData(`https://www.youtube.com${path}?pbj=1`);
+  const response = getChannelResponse(data);
 
-    const data = await getData(`https://www.youtube.com${path}?pbj=1`, context);
-    const response = getChannelResponse(data);
-
-    if (response.alerts) {
-      const alerts = response.alerts.map((alert) => alert.alertRenderer.text.simpleText);
-      console.log('channel has alerts', alerts, JSON.stringify(response.alerts, null, 2));
-      return {
-        statusCode: 403
-      };
-    }
-
+  if (response.alerts) {
+    const alerts = response.alerts.map((alert) => alert.alertRenderer.text.simpleText);
+    console.log('channel has alerts', alerts, JSON.stringify(response.alerts, null, 2));
     return {
-      statusCode: 200,
-      body: JSON.stringify(getChannel(response)),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    };
-  } else if (routeKey === 'GET /video') {
-    const { videoId, url } = event.queryStringParameters;
-    const path = buildVideoPath(videoId, url);
-    if (!path) {
-      return {
-        statusCode: 400
-      }
-    }
-
-    const data = await getData(`https://www.youtube.com${path}&pbj=1`, context);
-    const response = getVideoResponse(data);
-
-    if (response.playabilityStatus.status === 'LOGIN_REQUIRED') {
-      console.log('video is private', JSON.stringify(response.playabilityStatus, null, 2));
-      return {
-        statusCode: 403
-      };
-    }
-
-    if (response.playabilityStatus.status === 'ERROR') {
-      console.log('video is not available', JSON.stringify(response.playabilityStatus, null, 2));
-      return {
-        statusCode: 403
-      };
-    }
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify(getVideo(response)),
-      headers: {
-        'Content-Type': 'application/json'
-      }
+      statusCode: 403
     };
   }
 
   return {
-    statusCode: 404
+    statusCode: 200,
+    body: JSON.stringify(getChannel(response)),
+    headers: {
+      'Content-Type': 'application/json'
+    }
   };
 };
-
-// channel
 
 const buildChannelPath = (channelId, url) => {
   if (channelId) {
@@ -190,6 +123,40 @@ const getChannelTitle = (response) => {
 };
 
 // video
+
+const handleVideo = async (videoId, url) => {
+  const path = buildVideoPath(videoId, url);
+  if (!path) {
+    return {
+      statusCode: 400
+    }
+  }
+
+  const data = await getData(`https://www.youtube.com${path}&pbj=1`);
+  const response = getVideoResponse(data);
+
+  if (response.playabilityStatus.status === 'LOGIN_REQUIRED') {
+    console.log('video is private', JSON.stringify(response.playabilityStatus, null, 2));
+    return {
+      statusCode: 403
+    };
+  }
+
+  if (response.playabilityStatus.status === 'ERROR') {
+    console.log('video is not available', JSON.stringify(response.playabilityStatus, null, 2));
+    return {
+      statusCode: 403
+    };
+  }
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify(getVideo(response)),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+}
 
 const buildVideoPath = (videoId, url) => {
   if (videoId) {
@@ -323,3 +290,9 @@ const getVideoVideoId = (response) => {
     throw error;
   }
 };
+
+module.exports = {
+  RateLimitedError,
+  handleChannel,
+  handleVideo
+}

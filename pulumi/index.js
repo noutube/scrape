@@ -21,7 +21,7 @@ const lambda = new aws.lambda.Function(projectName, {
   }),
   runtime: 'nodejs20.x',
   role: lambdaRole.arn,
-  handler: 'scrape.handler',
+  handler: 'aws.handler',
   timeout: 30,
   memorySize: 128,
   environment: {
