@@ -5,7 +5,7 @@ const {
 } = process.env;
 
 const sendResponse = (res, response) => {
-  res.status(response.status);
+  res.status(response.statusCode);
   if (response.headers) {
     res.set(response.headers);
   }
@@ -26,11 +26,11 @@ exports.handler = async (req, res) => {
     return;
   }
 
-  if (req.path.endsWith('/channel')) {
+  if (req.method == 'GET' && req.path === '/channel') {
     const { channelId, url } = req.query;
     sendResponse(res, await handleChannel(channelId, url));
     return;
-  } else if (req.path.endsWith('/video')) {
+  } else if (req.method == 'GET' && req.path === '/video') {
     const { videoId, url } = req.query;
     sendResponse(res, await handleVideo(videoId, url));
     return;

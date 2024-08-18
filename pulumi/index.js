@@ -1,11 +1,61 @@
 const pulumi = require('@pulumi/pulumi');
 const aws = require('@pulumi/aws');
+const gcp = require('@pulumi/gcp');
 
 const config = new pulumi.Config();
 
 const projectName = pulumi.getProject();
 const domain = config.require('domain');
 const token = config.requireSecret('token');
+
+const code = new pulumi.asset.AssetArchive({
+  '.': new pulumi.asset.FileArchive('../src')
+});
+
+// Cloud Function
+
+const bucket = new gcp.storage.Bucket(projectName, {
+  name: `${projectName}-gcf-source`,
+  location: 'AUSTRALIA-SOUTHEAST1',
+  uniformBucketLevelAccess: true
+});
+
+const object = new gcp.storage.BucketObject(projectName, {
+  name: `${projectName}.zip`,
+  bucket: bucket.name,
+  source: code
+});
+
+const cf = new gcp.cloudfunctionsv2.Function(projectName, {
+  name: projectName,
+  location: 'australia-southeast1',
+  buildConfig: {
+    runtime: 'nodejs20',
+    entryPoint: 'handler',
+    source: {
+      storageSource: {
+        bucket: bucket.name,
+        object: object.name,
+      }
+    }
+  },
+  serviceConfig: {
+    maxInstanceCount: 1,
+    environmentVariables: {
+      TOKEN: token
+    }
+  }
+});
+
+// https://github.com/hashicorp/terraform-provider-google/issues/5833#issuecomment-1237493434
+new gcp.cloudrun.IamBinding(`${projectName}-invoker`, {
+  location: cf.location,
+  service: cf.name,
+  role: 'roles/run.invoker',
+  members: [
+    'allUsers'
+  ]
+});
 
 // Lambda
 
@@ -16,9 +66,7 @@ const lambdaRole = new aws.iam.Role(projectName, {
 });
 
 const lambda = new aws.lambda.Function(projectName, {
-  code: new pulumi.asset.AssetArchive({
-    '.': new pulumi.asset.FileArchive('../src')
-  }),
+  code,
   runtime: 'nodejs20.x',
   role: lambdaRole.arn,
   handler: 'aws.handler',
@@ -26,7 +74,8 @@ const lambda = new aws.lambda.Function(projectName, {
   memorySize: 128,
   environment: {
     variables: {
-      TOKEN: token
+      TOKEN: token,
+      GCP_URL: cf.url
     }
   }
 });

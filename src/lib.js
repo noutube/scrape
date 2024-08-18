@@ -34,7 +34,7 @@ const handleChannel = async (channelId, url) => {
   if (!path) {
     return {
       statusCode: 400
-    }
+    };
   }
 
   const data = await getData(`https://www.youtube.com${path}?pbj=1`);
@@ -129,7 +129,7 @@ const handleVideo = async (videoId, url) => {
   if (!path) {
     return {
       statusCode: 400
-    }
+    };
   }
 
   const data = await getData(`https://www.youtube.com${path}&pbj=1`);
