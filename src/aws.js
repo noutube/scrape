@@ -26,6 +26,11 @@ const forceColdStart = async (context) => {
 };
 
 const proxyRequest = async (resource, query) => {
+  Object.keys(query).forEach(key => {
+    if (typeof query[key] === 'undefined') {
+      delete query[key];
+    }
+  });
   const queryString = new URLSearchParams({ ...query, token: TOKEN });
   const url = `${GCP_URL}/${resource}?${queryString}`;
   const response = await fetch(url);

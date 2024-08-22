@@ -5,12 +5,14 @@ const {
 } = process.env;
 
 const sendResponse = (res, response) => {
-  res.status(response.statusCode);
   if (response.headers) {
     res.set(response.headers);
   }
   if (response.body) {
+    res.status(response.statusCode);
     res.send(response.body);
+  } else {
+    res.sendStatus(response.statusCode);
   }
 };
 
@@ -26,14 +28,18 @@ exports.handler = async (req, res) => {
     return;
   }
 
-  if (req.method == 'GET' && req.path === '/channel') {
-    const { channelId, url } = req.query;
-    sendResponse(res, await handleChannel(channelId, url));
-    return;
-  } else if (req.method == 'GET' && req.path === '/video') {
-    const { videoId, url } = req.query;
-    sendResponse(res, await handleVideo(videoId, url));
-    return;
+  try {
+    if (req.method == 'GET' && req.path === '/channel') {
+      const { channelId, url } = req.query;
+      sendResponse(res, await handleChannel(channelId, url));
+      return;
+    } else if (req.method == 'GET' && req.path === '/video') {
+      const { videoId, url } = req.query;
+      sendResponse(res, await handleVideo(videoId, url));
+      return;
+    }
+  } catch (error) {
+    console.log('handler failed', error);
   }
 
   res.sendStatus(404);
