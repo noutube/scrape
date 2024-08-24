@@ -1,5 +1,6 @@
 config:
   aws:region: ap-southeast-2
+  gcp:project: noutube-432804
   noutube-scrape:domain: scrape.noutu.be
   noutube-scrape:token:
     secure: AAABAIfRjLoZXxIIxAal8mEuHlrQ8LTGYLTmSKCLYM0+5ZxRrPGuRz9A5SvOSNsvbS8KUVnjhTF5L90JIoB8qg==

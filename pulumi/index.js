@@ -36,6 +36,7 @@ const cf = new gcp.cloudfunctionsv2.Function(projectName, {
       storageSource: {
         bucket: bucket.name,
         object: object.name,
+        generation: object.generation
       }
     }
   },
