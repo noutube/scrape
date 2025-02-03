@@ -43,6 +43,18 @@ const handleChannel = async (channelId, url) => {
   if (response.alerts) {
     const alerts = response.alerts.map((alert) => alert.alertRenderer.text.simpleText);
     console.log('channel has alerts', alerts, JSON.stringify(response.alerts, null, 2));
+    if (alerts.includes('This channel was removed because it violated our Community Guidelines.')) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({
+          visible: false,
+          reason: 'banned'
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    }
     return {
       statusCode: 403
     };
@@ -50,7 +62,10 @@ const handleChannel = async (channelId, url) => {
 
   return {
     statusCode: 200,
-    body: JSON.stringify(getChannel(response)),
+    body: JSON.stringify({
+      visible: true,
+      ...getChannel(response)
+    }),
     headers: {
       'Content-Type': 'application/json'
     }
@@ -137,6 +152,19 @@ const handleVideo = async (videoId, url) => {
 
   if (response.playabilityStatus.status === 'LOGIN_REQUIRED') {
     console.log('video is private', JSON.stringify(response.playabilityStatus, null, 2));
+    const reason = getLoginRequiredReason(response.playabilityStatus);
+    if (reason) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({
+          visible: false,
+          reason
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    }
     return {
       statusCode: 403
     };
@@ -145,13 +173,23 @@ const handleVideo = async (videoId, url) => {
   if (response.playabilityStatus.status === 'ERROR') {
     console.log('video is not available', JSON.stringify(response.playabilityStatus, null, 2));
     return {
-      statusCode: 403
-    };
+      statusCode: 200,
+      body: JSON.stringify({
+        visible: false,
+        reason: 'removed'
+      }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }
   }
 
   return {
     statusCode: 200,
-    body: JSON.stringify(getVideo(response)),
+    body: JSON.stringify({
+      visible: true,
+      ...getVideo(response)
+    }),
     headers: {
       'Content-Type': 'application/json'
     }
@@ -175,6 +213,16 @@ const buildVideoPath = (videoId, url) => {
   } else {
     console.log('missing videoId or url');
   }
+};
+
+const getLoginRequiredReason = (playabilityStatus) => {
+  if (playabilityStatus.messages.includes('This is a private video. Please sign in to verify that you may see it.')) {
+    return 'private';
+  }
+  if (playabilityStatus.reason === 'Sign in to confirm your age') {
+    return 'age';
+  }
+  return null;
 };
 
 const getVideo = (response) => {
