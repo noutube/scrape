@@ -4,8 +4,7 @@ A simple lambda to scrape some data from YouTube missing from the payloads we re
 
 ## Deploy
 
-1. Install `pulumi`.
-2. Configure `aws-cli` credentials.
-3. Run `yarn` inside `pulumi/`.
-4. Run `pulumi up` inside `pulumi/` to deploy.
-5. Manually create CNAME records as specified in `pulumi/index.js`.
+1. Install `pulumi` and configure credentials.
+2. Run `yarn` inside `pulumi/`.
+3. Run `pulumi up` inside `pulumi/` to deploy.
+4. Use `pulumi stack output url` to get URL.

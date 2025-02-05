@@ -53,3 +53,5 @@ new gcp.cloudrun.IamBinding(`${projectName}-invoker`, {
     'allUsers'
   ]
 });
+
+exports.url = cf.url;
