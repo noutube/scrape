@@ -216,7 +216,7 @@ const buildVideoPath = (videoId, url) => {
 };
 
 const getLoginRequiredReason = (playabilityStatus) => {
-  if (playabilityStatus.messages.includes('This is a private video. Please sign in to verify that you may see it.')) {
+  if (playabilityStatus.messages?.includes('This is a private video. Please sign in to verify that you may see it.')) {
     return 'private';
   }
   if (playabilityStatus.reason === 'Sign in to confirm your age') {
