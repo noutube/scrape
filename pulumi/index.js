@@ -5,6 +5,7 @@ const config = new pulumi.Config();
 
 const projectName = pulumi.getProject();
 const token = config.requireSecret('token');
+const gcpApiKey = config.requireSecret('gcpApiKey');
 
 const code = new pulumi.asset.AssetArchive({
   '.': new pulumi.asset.FileArchive('../src')
@@ -39,7 +40,8 @@ const cf = new gcp.cloudfunctionsv2.Function(projectName, {
   serviceConfig: {
     maxInstanceCount: 1,
     environmentVariables: {
-      TOKEN: token
+      TOKEN: token,
+      GCP_API_KEY: gcpApiKey
     }
   }
 });

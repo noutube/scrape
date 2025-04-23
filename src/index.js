@@ -1,4 +1,4 @@
-const { handleChannel, handleVideo } = require('./lib');
+const { handleChannel, handleVideo } = require('./data');
 
 const {
   TOKEN

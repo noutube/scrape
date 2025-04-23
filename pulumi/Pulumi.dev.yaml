@@ -4,3 +4,5 @@ config:
   noutube-scrape:domain: scrape.noutu.be
   noutube-scrape:token:
     secure: AAABAIfRjLoZXxIIxAal8mEuHlrQ8LTGYLTmSKCLYM0+5ZxRrPGuRz9A5SvOSNsvbS8KUVnjhTF5L90JIoB8qg==
+  noutube-scrape:gcpApiKey:
+    secure: AAABAFf8t+aeODlIS9d2OCFv7pMWK199NN2fM7Jkbve1NSs+JfvBhW2sZfcoctTReslEGPVVdUZrAVFa22eVV0uoWsTnv9I=
